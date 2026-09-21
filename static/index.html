@@ -6,14 +6,23 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg-body: #f3f4f6;
-      --bg-header: #020617;
-      --bg-card: #020617;
-      --border: #1f2937;
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-soft: #f1f5f9;
+      --bg-accent-soft: #eff6ff;
+      --border: #dbe3ee;
+      --border-strong: #cbd5e1;
       --accent: #2563eb;
+      --accent-dark: #1d4ed8;
       --text-dark: #0f172a;
-      --text-light: #e5e7eb;
-      --text-muted: #9ca3af;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --status-onhand: #0072b2;
+      --status-arriving: #e69f00;
+      --status-process: #cc79a7;
+      --status-done: #009e73;
+      --status-other: #6b7280;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
     }
 
     * { box-sizing: border-box; }
@@ -21,42 +30,43 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #e5e7eb, #f3f4f6 42%, #e5e7eb 85%);
+      background: var(--bg-body);
       color: var(--text-dark);
     }
 
     a { color: inherit; text-decoration: none; }
 
-    /* Nav */
-
     .nav {
-      background: radial-gradient(circle at top left, #1e40af, #020617 60%);
-      border-bottom: 1px solid #020617;
-      padding: 10px 24px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: var(--text-light);
+      color: var(--text-dark);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .nav-logo {
-      width: 30px;
-      height: 30px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #2563eb, #22c55e);
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.8rem;
-      font-weight: 600;
-      color: #f9fafb;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+      font-weight: 700;
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
     }
 
     .nav-title {
@@ -65,309 +75,350 @@
     }
 
     .nav-title span:first-child {
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
 
     .nav-title span:last-child {
-      font-size: 0.75rem;
-      color: rgba(209,213,219,0.85);
+      font-size: 0.78rem;
+      color: var(--text-muted);
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 14px;
-      font-size: 0.85rem;
-      color: rgba(209,213,219,0.9);
+      gap: 12px;
+      font-size: 0.88rem;
+      color: var(--text-body);
     }
 
     .nav-link {
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-soft);
+      border-color: var(--border);
     }
 
     .nav-link.active {
-      color: #bfdbfe;
-      border-color: rgba(37, 99, 235, 0.6);
-      background: rgba(15, 23, 42, 0.85);
+      color: var(--accent-dark);
+      border-color: #bfdbfe;
+      background: var(--bg-accent-soft);
+      font-weight: 600;
     }
-
-    /* Shell */
 
     .shell {
-      max-width: 1180px;
+      max-width: 1220px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 24px;
     }
-
-    .shell-inner {
-      background: #f9fafb;
-      border-radius: 18px;
-      border: 1px solid #e5e7eb;
-      box-shadow:
-        0 18px 40px rgba(15,23,42,0.18),
-        0 0 0 1px rgba(148,163,184,0.08);
-      padding: 20px 18px 18px;
-    }
-
-    /* Hero */
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr);
+      grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
       gap: 18px;
       margin-bottom: 18px;
     }
 
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: minmax(0, 1fr); }
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .hero-text h1 {
-      margin: 0 0 6px;
-      font-size: 1.6rem;
-      letter-spacing: 0.02em;
-      color: var(--text-dark);
+    .hero-panel,
+    .card,
+    .filter-bar,
+    .snapshot-note {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
     }
 
-    .hero-text p {
-      margin: 0 0 10px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
+    .hero-main {
+      padding: 22px;
+    }
+
+    .hero-main h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+      line-height: 1.1;
+    }
+
+    .hero-main p {
+      margin: 0;
+      color: var(--text-body);
+      font-size: 0.95rem;
+      max-width: 62ch;
     }
 
     .hero-badges {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 4px;
-      font-size: 0.78rem;
+      margin-top: 14px;
+      font-size: 0.8rem;
     }
 
     .badge {
-      padding: 4px 9px;
+      padding: 5px 10px;
       border-radius: 999px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      color: #4b5563;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text-body);
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
 
     .badge-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
       background: #22c55e;
     }
 
-    .hero-cta {
-      margin-top: 12px;
+    .hero-panel.hero-summary {
+      padding: 18px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 10px;
     }
 
-    .btn-primary {
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: none;
-      background: var(--accent);
-      color: #f9fafb;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .btn-ghost {
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      color: #4b5563;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .hero-panel {
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background:
-        radial-gradient(circle at top left, rgba(37, 99, 235, 0.2), transparent 60%),
-        var(--bg-card);
-      padding: 12px 12px 8px;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.9);
-      color: var(--text-light);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .hero-panel h2 {
+    .hero-summary h2 {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
-    .hero-panel p {
+    .hero-summary p {
       margin: 0;
-      font-size: 0.8rem;
-      color: #9ca3af;
+      font-size: 0.84rem;
+      color: var(--text-muted);
     }
 
     .hero-metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 8px;
+      gap: 10px;
+      margin-top: 4px;
     }
 
     .metric {
-      padding: 6px 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      background: rgba(15, 23, 42, 0.92);
-      font-size: 0.8rem;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
     }
 
     .metric-label {
-      font-size: 0.7rem;
-      color: #9ca3af;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
     }
 
     .metric-value {
-      margin-top: 2px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      margin-top: 6px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dark);
     }
 
-    /* Filter bar */
+    .snapshot-note {
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--text-body);
+      font-size: 0.9rem;
+    }
+
+    .snapshot-note strong {
+      color: var(--text-dark);
+    }
 
     .filter-bar {
-      margin-bottom: 14px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
+      margin-bottom: 18px;
+      padding: 14px 16px;
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 10px 14px;
-      font-size: 0.8rem;
-      color: #6b7280;
+      align-items: end;
+      gap: 12px 16px;
+      font-size: 0.83rem;
+      color: var(--text-body);
+    }
+
+    .filter-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .filter-label {
-      font-weight: 600;
-      color: #111827;
+      font-weight: 700;
+      color: var(--text-dark);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      font-size: 0.72rem;
     }
 
     .filter-input {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      color: #374151;
-      font-size: 0.8rem;
+      min-width: 160px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      background: #ffffff;
+      color: var(--text-body);
+      font-size: 0.86rem;
     }
 
     .filter-actions {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .filter-apply {
-      padding: 4px 10px;
-      border-radius: 999px;
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .filter-apply,
+    .btn-primary {
+      padding: 9px 14px;
+      border-radius: 12px;
       border: none;
       background: var(--accent);
-      color: #f9fafb;
-      cursor: pointer;
-      font-size: 0.8rem;
+      color: #ffffff;
+      font-weight: 600;
     }
 
-    .filter-clear {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
+    .btn-ghost,
+    .filter-reset {
+      padding: 9px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
       background: #ffffff;
-      color: #4b5563;
-      cursor: pointer;
-      font-size: 0.8rem;
+      color: var(--text-body);
     }
 
-    .summary-pill {
-      margin: 6px 0 12px;
-      display: inline-block;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: #eff6ff;
-      border: 1px solid #dbeafe;
-      font-size: 0.75rem;
-      color: #1e40af;
-    }
-
-    /* Charts grid */
-
-    .grid {
+    .overview-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-      grid-template-rows: 320px 320px;
-      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
     }
 
-    @media (max-width: 960px) {
-      .grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 320px; }
+    @media (max-width: 1024px) {
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .card {
-      background: var(--bg-card);
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 12px 12px 8px;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+      padding: 18px;
+      min-height: 380px;
       display: flex;
       flex-direction: column;
-      color: var(--text-light);
     }
 
-    .card-header h3 {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-header h2 {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 1.02rem;
+      color: var(--text-dark);
     }
 
-    .card-header span {
-      display: block;
-      margin-top: 2px;
-      font-size: 0.78rem;
-      color: #9ca3af;
+    .card-header p {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 52ch;
+    }
+
+    .panel-tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--bg-accent-soft);
+      color: var(--accent-dark);
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     .chart-wrapper {
-      flex: 1;
       position: relative;
-      margin-top: 6px;
+      flex: 1;
+      min-height: 280px;
     }
 
-    .card-meta {
-      margin-top: 4px;
-      font-size: 0.78rem;
-      color: #9ca3af;
+    .meta {
+      margin-top: 10px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
     }
 
-    footer {
-      padding: 10px 20px 14px;
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text-body);
       font-size: 0.78rem;
-      color: #6b7280;
-      text-align: center;
+    }
+
+    .status-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: var(--status-other);
+      flex-shrink: 0;
+    }
+
+    .status-swatch.arriving {
+      border-radius: 2px;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--status-arriving),
+        var(--status-arriving) 3px,
+        #fff3cd 3px,
+        #fff3cd 6px
+      );
+      border-color: rgba(180, 83, 9, 0.25);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-align: right;
     }
   </style>
 </head>
@@ -376,429 +427,388 @@
     <div class="nav-left">
       <div class="nav-logo">JDL</div>
       <div class="nav-title">
-        <span>JDL Cargo Management</span>
-        <span>Internal Analytics Dashboard</span>
+        <span>JDL Cargo Analytics</span>
+        <span>Operations overview from the latest Magaya export</span>
       </div>
     </div>
     <div class="nav-links">
-      <a href="/" class="nav-link active">Dashboard</a>
-      <a href="/static/airlines.html" class="nav-link">Airline View</a>
+      <a class="nav-link active" href="/">Overview</a>
+      <a class="nav-link" href="/static/airlines.html">Carrier View</a>
     </div>
   </nav>
 
-  <div class="shell">
-    <div class="shell-inner">
-      <section class="hero">
-        <div class="hero-text">
-          <h1>Dependable Cargo Insight</h1>
-          <p>
-            Snapshot of shipments, consignees, and carriers loaded from the latest Magaya export.
-          </p>
-          <div class="hero-badges">
-            <div class="badge"><span class="badge-dot"></span> Daily CSV from Magaya</div>
-            <div class="badge">FastAPI · SQLite · Chart.js</div>
-            <div class="badge">Internal use only</div>
-          </div>
-          <div class="hero-cta">
-            <button class="btn-primary" onclick="window.location.href='/static/airlines.html'">
-              View Airline Overview
-            </button>
-            <button class="btn-ghost" onclick="window.location.href='/docs'">
-              API Docs
-            </button>
-          </div>
-        </div>
-        <div class="hero-panel">
-          <h2>Filtered Snapshot</h2>
-          <p>Current view based on the global date filter.</p>
-          <div class="hero-metrics">
-            <div class="metric">
-              <div class="metric-label">Shipments (filtered)</div>
-              <div class="metric-value" id="metricShipments">–</div>
-            </div>
-            <div class="metric">
-              <div class="metric-label">Total Weight (lb)</div>
-              <div class="metric-value" id="metricTotalWeight">–</div>
-            </div>
-            <div class="metric">
-              <div class="metric-label">Unique Consignees</div>
-              <div class="metric-value" id="metricConsignees">–</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Global date filter -->
-      <div class="filter-bar">
-        <span class="filter-label">Data filter</span>
-        <label>
-          From
-          <input type="date" id="startDate" class="filter-input">
-        </label>
-        <label>
-          To
-          <input type="date" id="endDate" class="filter-input">
-        </label>
-        <div class="filter-actions">
-          <button id="applyFilter" class="filter-apply">Apply</button>
-          <button id="clearFilter" class="filter-clear">Clear</button>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-panel hero-main">
+        <h1>Operations Snapshot</h1>
+        <p>Review shipments, consignee concentration, monthly volume, and shipment-status distribution from the current Magaya export. The date filter below is intended to drive the current reporting view across this page.</p>
+        <div class="hero-badges">
+          <span class="badge"><span class="badge-dot"></span> White-background reporting layout</span>
+          <span class="badge">Filter-aware overview cards</span>
+          <span class="badge">Status labels no longer rely on color alone</span>
         </div>
       </div>
 
-      <div id="filterSummary" class="summary-pill">Showing: all data</div>
-
-      <section class="grid">
-        <div class="card">
-          <div class="card-header">
-            <h3>Top Consignees</h3>
-            <span>Shipment count and total weight by consignee.</span>
+      <div class="hero-panel hero-summary">
+        <h2>Snapshot summary</h2>
+        <p>Use these totals as a quick operating summary for the selected date range, rather than an all-time visual snapshot.</p>
+        <div class="hero-metrics">
+          <div class="metric">
+            <div class="metric-label">Shipments</div>
+            <div class="metric-value" id="summaryShipments">—</div>
           </div>
-          <div class="chart-wrapper">
-            <canvas id="byConsigneeChart"></canvas>
+          <div class="metric">
+            <div class="metric-label">Total Weight</div>
+            <div class="metric-value" id="summaryWeight">—</div>
           </div>
-          <div class="card-meta" id="byConsigneeMeta">Loading…</div>
+          <div class="metric">
+            <div class="metric-label">Active Consignees</div>
+            <div class="metric-value" id="summaryConsignees">—</div>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Shipment Status</h3>
-            <span>InProcess vs Delivered vs OnHand (overall).</span>
+    <section class="snapshot-note">
+      <div><strong>Current reporting view:</strong> Snapshot of shipments, consignees, and carriers loaded from the latest Magaya export.</div>
+      <div id="rangeSummary"><strong>Date scope:</strong> All available shipment dates.</div>
+    </section>
+
+    <section class="filter-bar">
+      <div class="filter-block">
+        <label class="filter-label" for="startDate">Start date</label>
+        <input class="filter-input" id="startDate" type="date" />
+      </div>
+      <div class="filter-block">
+        <label class="filter-label" for="endDate">End date</label>
+        <input class="filter-input" id="endDate" type="date" />
+      </div>
+      <div class="filter-block">
+        <label class="filter-label">Reporting intent</label>
+        <div class="meta">Apply a monthly, weekly, or custom review window before reading the KPI cards or charts.</div>
+      </div>
+      <div class="filter-actions">
+        <button class="filter-reset" id="resetFilters">Reset</button>
+        <button class="filter-apply" id="applyFilters">Apply filters</button>
+      </div>
+    </section>
+
+    <section class="overview-grid">
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Shipment Volume by Month</h2>
+            <p>Monthly shipment count and total chargeable weight for the current filtered view.</p>
           </div>
-          <div class="chart-wrapper">
-            <canvas id="statusPieChart"></canvas>
-          </div>
-          <div class="card-meta" id="statusMeta">Loading…</div>
+          <span class="panel-tag">Trend</span>
         </div>
+        <div class="chart-wrapper"><canvas id="volumeChart"></canvas></div>
+        <div class="meta" id="volumeMeta">Loading monthly shipment trend…</div>
+      </article>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Volume by Month</h3>
-            <span>Shipment count and weight over time.</span>
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Shipment Status Snapshot</h2>
+            <p>Status categories are displayed with stronger contrast and separate labels so the view remains readable for color-blind users.</p>
           </div>
-          <div class="chart-wrapper">
-            <canvas id="volumeByMonthChart"></canvas>
-          </div>
-          <div class="card-meta" id="volumeByMonthMeta">Loading…</div>
+          <span class="panel-tag">Visibility</span>
         </div>
+        <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+        <div class="status-legend" id="statusLegend"></div>
+        <div class="meta" id="statusMeta">Loading shipment-status distribution…</div>
+      </article>
 
-        <div class="card">
-          <div class="card-header">
-            <h3>Carrier Snapshot</h3>
-            <span>Weight by carrier (excluding internal fleet).</span>
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Top Consignees by Shipment Count</h2>
+            <p>A simplified ranked view to reduce clutter and make concentration easier to interpret at a glance.</p>
           </div>
-          <div class="chart-wrapper">
-            <canvas id="carrierSnapshotChart"></canvas>
-          </div>
-          <div class="card-meta" id="carrierSnapshotMeta">Loading…</div>
+          <span class="panel-tag">Ranked</span>
         </div>
-      </section>
-    </div>
-  </div>
+        <div class="chart-wrapper"><canvas id="consigneeChart"></canvas></div>
+        <div class="meta" id="consigneeMeta">Loading consignee ranking…</div>
+      </article>
 
-  <footer>
-    © 2026 JDL Cargo Management Company · Internal Analytics
-  </footer>
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Top Consignees by Total Weight</h2>
+            <p>A weight-based comparison for the highest-volume consignees in the selected reporting window.</p>
+          </div>
+          <span class="panel-tag">Weight</span>
+        </div>
+        <div class="chart-wrapper"><canvas id="weightChart"></canvas></div>
+        <div class="meta" id="weightMeta">Loading consignee weight ranking…</div>
+      </article>
+    </section>
+
+    <div class="footer-note">Dashboard snapshot is based on the latest available Magaya export and may not represent live warehouse activity minute by minute.</div>
+  </main>
 
   <script>
+    let volumeChart, statusChart, consigneeChart, weightChart;
+
+    function buildParams() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const params = new URLSearchParams();
+      if (startDate) params.set('start_date', startDate);
+      if (endDate) params.set('end_date', endDate);
+      return params;
+    }
+
+    function applyRangeSummary() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const rangeSummary = document.getElementById('rangeSummary');
+
+      if (startDate && endDate) {
+        rangeSummary.innerHTML = `<strong>Date scope:</strong> ${startDate} to ${endDate}.`;
+      } else if (startDate) {
+        rangeSummary.innerHTML = `<strong>Date scope:</strong> From ${startDate} onward.`;
+      } else if (endDate) {
+        rangeSummary.innerHTML = `<strong>Date scope:</strong> Up to ${endDate}.`;
+      } else {
+        rangeSummary.innerHTML = `<strong>Date scope:</strong> All available shipment dates.`;
+      }
+    }
+
     async function fetchJson(url) {
       const res = await fetch(url);
-      if (!res.ok) throw new Error("HTTP " + res.status + " for " + url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
       return res.json();
     }
 
-    function buildUrlWithDates(base) {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-
-      const params = new URLSearchParams();
-      if (start) params.append("start_date", start);
-      if (end) params.append("end_date", end);
-
-      if ([...params].length === 0) return base;
-
-      const sep = base.includes("?") ? "&" : "?";
-      return base + sep + params.toString();
+    function truncateLabel(label, limit = 24) {
+      if (!label) return 'Unknown';
+      return label.length > limit ? `${label.slice(0, limit - 1)}…` : label;
     }
 
-    function formatNumber(x) {
-      return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(x || 0);
+    function statusColor(status) {
+      const value = (status || '').toLowerCase();
+      if (value.includes('on hand')) return getComputedStyle(document.documentElement).getPropertyValue('--status-onhand').trim();
+      if (value.includes('arriv')) return getComputedStyle(document.documentElement).getPropertyValue('--status-arriving').trim();
+      if (value.includes('process')) return getComputedStyle(document.documentElement).getPropertyValue('--status-process').trim();
+      if (value.includes('release') || value.includes('complete')) return getComputedStyle(document.documentElement).getPropertyValue('--status-done').trim();
+      return getComputedStyle(document.documentElement).getPropertyValue('--status-other').trim();
     }
 
-    function updateFilterSummary() {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const el = document.getElementById("filterSummary");
-
-      if (!start && !end) {
-        el.textContent = "Showing: all data";
-      } else if (start && end) {
-        el.textContent = "Showing: " + start + " → " + end;
-      } else if (start) {
-        el.textContent = "Showing: from " + start;
-      } else if (end) {
-        el.textContent = "Showing: up to " + end;
-      }
+    function statusPattern(status) {
+      const value = (status || '').toLowerCase();
+      if (value.includes('arriv')) return 'arriving';
+      return '';
     }
 
-    let byConsigneeChart, statusPieChart, volumeChart, carrierChart;
+    function updateSummaryMetrics(monthlyData, consigneeData) {
+      const shipmentTotal = monthlyData.reduce((sum, row) => sum + (row.shipment_count || 0), 0);
+      const weightTotal = monthlyData.reduce((sum, row) => sum + (row.total_weight || 0), 0);
+      const consigneeTotal = consigneeData.length;
 
-    async function renderByConsignee() {
-      document.getElementById("byConsigneeMeta").textContent = "Loading…";
-      const url = buildUrlWithDates("/api/summary/by-consignee");
-      const data = await fetchJson(url);
+      document.getElementById('summaryShipments').textContent = shipmentTotal.toLocaleString();
+      document.getElementById('summaryWeight').textContent = `${weightTotal.toFixed(1)} lb`;
+      document.getElementById('summaryConsignees').textContent = consigneeTotal.toLocaleString();
+    }
 
-      if (!data.length) {
-        document.getElementById("byConsigneeMeta").textContent = "No data for this range.";
-      }
+    async function renderVolumeChart(params) {
+      const data = await fetchJson(`/api/summary/volume-by-month?${params}`);
+      const labels = data.map(row => `${row.year}-${String(row.month).padStart(2, '0')}`);
+      const counts = data.map(row => row.shipment_count || 0);
+      const weights = data.map(row => row.total_weight || 0);
 
-      const labels = data.map(d => d.consignee || "Unknown");
-      const counts = data.map(d => d.shipment_count || 0);
-      const weights = data.map(d => d.total_weight || 0);
+      document.getElementById('volumeMeta').textContent =
+        `${data.length} monthly points · ${counts.reduce((a, b) => a + b, 0).toLocaleString()} shipments shown.`;
 
-      const totalShipments = counts.reduce((a, b) => a + b, 0);
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-      const uniqueConsignees = data.length;
+      const ctx = document.getElementById('volumeChart').getContext('2d');
+      if (volumeChart) volumeChart.destroy();
 
-      document.getElementById("byConsigneeMeta").textContent =
-        uniqueConsignees + " consignees · " +
-        formatNumber(totalShipments) + " shipments · " +
-        formatNumber(totalWeight) + " lb";
-
-      document.getElementById("metricShipments").textContent = formatNumber(totalShipments);
-      document.getElementById("metricTotalWeight").textContent = formatNumber(totalWeight);
-      document.getElementById("metricConsignees").textContent = String(uniqueConsignees);
-
-      const ctx = document.getElementById("byConsigneeChart").getContext("2d");
-      if (byConsigneeChart) byConsigneeChart.destroy();
-
-      byConsigneeChart = new Chart(ctx, {
-        type: "bar",
+      volumeChart = new Chart(ctx, {
         data: {
           labels,
           datasets: [
             {
-              label: "Shipments",
+              type: 'bar',
+              label: 'Shipment Count',
               data: counts,
-              backgroundColor: "rgba(59, 130, 246, 0.8)"
+              backgroundColor: 'rgba(37, 99, 235, 0.72)',
+              borderRadius: 8,
+              yAxisID: 'y'
             },
             {
-              label: "Total Weight (lb)",
+              type: 'line',
+              label: 'Total Weight (lb)',
               data: weights,
-              type: "line",
-              yAxisID: "y1",
-              borderColor: "rgba(34, 197, 94, 0.95)",
-              backgroundColor: "rgba(34, 197, 94, 0.18)",
-              tension: 0.25
+              borderColor: '#0f766e',
+              backgroundColor: 'rgba(15, 118, 110, 0.1)',
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              yAxisID: 'y1'
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom' }
+          },
           scales: {
-            x: {
-              ticks: { autoSkip: false, maxRotation: 55, minRotation: 0 },
-              grid: { display: false }
-            },
             y: {
               beginAtZero: true,
-              title: { display: true, text: "Shipments" }
+              title: { display: true, text: 'Shipments' },
+              grid: { color: 'rgba(148, 163, 184, 0.18)' }
             },
             y1: {
               beginAtZero: true,
-              position: "right",
+              position: 'right',
               grid: { drawOnChartArea: false },
-              title: { display: true, text: "Weight (lb)" }
+              title: { display: true, text: 'Weight (lb)' }
+            },
+            x: {
+              grid: { display: false }
             }
-          },
-          plugins: { legend: { position: "bottom" } }
+          }
         }
       });
+
+      return data;
     }
 
-    async function renderStatus() {
-      document.getElementById("statusMeta").textContent = "Loading…";
-      // This endpoint does NOT support dates in your current backend
-      const url = "/api/status/summary";
-      const data = await fetchJson(url);
+    async function renderStatusChart() {
+      const data = await fetchJson('/api/status/summary');
+      const labels = data.map(row => row.status || 'Unknown');
+      const counts = data.map(row => row.shipment_count || 0);
+      const colors = labels.map(statusColor);
 
-      const labels = data.map(d => d.status || "Unknown");
-      const counts = data.map(d => d.shipment_count || 0);
+      document.getElementById('statusMeta').textContent =
+        `${data.length} status groups · labels and colors intentionally separated for visibility.`;
 
-      const total = counts.reduce((a, b) => a + b, 0) || 1;
+      const legend = document.getElementById('statusLegend');
+      legend.innerHTML = data.map(row => `
+        <span class="status-chip">
+          <span class="status-swatch ${statusPattern(row.status)}" style="background:${statusPattern(row.status) ? '' : statusColor(row.status)}"></span>
+          <span>${row.status || 'Unknown'} · ${row.shipment_count || 0} (${(row.percentage || 0).toFixed(1)}%)</span>
+        </span>
+      `).join('');
 
-      document.getElementById("statusMeta").textContent =
-        formatNumber(total) + " shipments · " +
-        data.map(d =>
-          d.status + ": " + d.shipment_count + " (" + d.percentage.toFixed(1) + "%)"
-        ).join(" · ");
+      const ctx = document.getElementById('statusChart').getContext('2d');
+      if (statusChart) statusChart.destroy();
 
-      const colorMap = {
-        inprocess: "#3b82f6",
-        delivered: "#22c55e",
-        onhand: "#f97316"
-      };
-      const bg = labels.map(label => {
-        const k = (label || "").toLowerCase();
-        return colorMap[k] || "#64748b";
-      });
-
-      const ctx = document.getElementById("statusPieChart").getContext("2d");
-      if (statusPieChart) statusPieChart.destroy();
-
-      statusPieChart = new Chart(ctx, {
-        type: "pie",
+      statusChart = new Chart(ctx, {
+        type: 'doughnut',
         data: {
           labels,
-          datasets: [
-            {
-              data: counts,
-              backgroundColor: bg,
-              borderColor: "#020617",
-              borderWidth: 1
-            }
-          ]
+          datasets: [{
+            data: counts,
+            backgroundColor: colors,
+            borderColor: '#ffffff',
+            borderWidth: 3,
+            hoverOffset: 4
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: "top", labels: { color: "#e5e7eb" } }
+            legend: { display: false }
           }
         }
       });
     }
 
-    async function renderVolumeByMonth() {
-      document.getElementById("volumeByMonthMeta").textContent = "Loading…";
-      const url = buildUrlWithDates("/api/summary/volume-by-month");
-      const data = await fetchJson(url);
+    async function renderConsigneeCharts(params) {
+      const data = await fetchJson(`/api/summary/by-consignee?${params}`);
+      const topByCount = [...data].sort((a, b) => (b.shipment_count || 0) - (a.shipment_count || 0)).slice(0, 10);
+      const topByWeight = [...data].sort((a, b) => (b.total_weight || 0) - (a.total_weight || 0)).slice(0, 10);
 
-      const labels = data.map(d => d.year + "-" + String(d.month).padStart(2, "0"));
-      const counts = data.map(d => d.shipment_count || 0);
-      const weights = data.map(d => d.total_weight || 0);
+      document.getElementById('consigneeMeta').textContent =
+        `${topByCount.length} ranked consignees · simplified shipment-count view.`;
+      document.getElementById('weightMeta').textContent =
+        `${topByWeight.length} ranked consignees · weight-based comparison.`;
 
-      const totalShipments = counts.reduce((a, b) => a + b, 0);
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-
-      document.getElementById("volumeByMonthMeta").textContent =
-        labels.length + " months · " +
-        formatNumber(totalShipments) + " shipments · " +
-        formatNumber(totalWeight) + " lb";
-
-      const ctx = document.getElementById("volumeByMonthChart").getContext("2d");
-      if (volumeChart) volumeChart.destroy();
-
-      volumeChart = new Chart(ctx, {
-        type: "line",
+      const countCtx = document.getElementById('consigneeChart').getContext('2d');
+      if (consigneeChart) consigneeChart.destroy();
+      consigneeChart = new Chart(countCtx, {
+        type: 'bar',
         data: {
-          labels,
-          datasets: [
-            {
-              label: "Shipment Count",
-              data: counts,
-              borderColor: "rgba(248, 113, 113, 0.95)",
-              backgroundColor: "rgba(248, 113, 113, 0.2)",
-              tension: 0.25,
-              yAxisID: "y"
-            },
-            {
-              label: "Total Weight (lb)",
-              data: weights,
-              borderColor: "rgba(59, 130, 246, 0.95)",
-              backgroundColor: "rgba(59, 130, 246, 0.2)",
-              tension: 0.25,
-              yAxisID: "y1"
-            }
-          ]
+          labels: topByCount.map(row => truncateLabel(row.consignee)),
+          datasets: [{
+            label: 'Shipment Count',
+            data: topByCount.map(row => row.shipment_count || 0),
+            backgroundColor: 'rgba(59, 130, 246, 0.78)',
+            borderRadius: 8
+          }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
           scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: "Shipments" }
-            },
-            y1: {
-              beginAtZero: true,
-              position: "right",
-              grid: { drawOnChartArea: false },
-              title: { display: true, text: "Weight (lb)" }
-            }
-          },
-          plugins: { legend: { position: "bottom" } }
+            x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.18)' } },
+            y: { grid: { display: false } }
+          }
         }
       });
-    }
 
-    async function renderCarrierSnapshot() {
-      document.getElementById("carrierSnapshotMeta").textContent = "Loading…";
-      // This endpoint also does NOT take dates currently
-      const url = "/api/airlines/weight-summary";
-      const data = await fetchJson(url);
-
-      const labels = data.map(d => d.carrier || "Unknown");
-      const weights = data.map(d => d.total_weight || 0);
-
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-
-      document.getElementById("carrierSnapshotMeta").textContent =
-        data.length + " airlines · " + formatNumber(totalWeight) + " lb total";
-
-      const ctx = document.getElementById("carrierSnapshotChart").getContext("2d");
-      if (carrierChart) carrierChart.destroy();
-
-      carrierChart = new Chart(ctx, {
-        type: "bar",
+      const weightCtx = document.getElementById('weightChart').getContext('2d');
+      if (weightChart) weightChart.destroy();
+      weightChart = new Chart(weightCtx, {
+        type: 'bar',
         data: {
-          labels,
-          datasets: [
-            {
-              label: "Weight (lb)",
-              data: weights,
-              backgroundColor: "rgba(56, 189, 248, 0.8)"
-            }
-          ]
+          labels: topByWeight.map(row => truncateLabel(row.consignee)),
+          datasets: [{
+            label: 'Total Weight (lb)',
+            data: topByWeight.map(row => row.total_weight || 0),
+            backgroundColor: 'rgba(14, 165, 233, 0.78)',
+            borderRadius: 8
+          }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
           scales: {
-            y: { beginAtZero: true, title: { display: true, text: "Weight (lb)" } },
-            x: { ticks: { autoSkip: false, maxRotation: 55, minRotation: 0 } }
-          },
-          plugins: { legend: { display: false } }
+            x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.18)' } },
+            y: { grid: { display: false } }
+          }
         }
       });
+
+      return data;
     }
 
-    async function renderAll() {
-      updateFilterSummary();
-      await renderByConsignee();
-      await renderStatus();
-      await renderVolumeByMonth();
-      await renderCarrierSnapshot();
+    async function applyDashboardFilters() {
+      try {
+        const params = buildParams();
+        applyRangeSummary();
+        const [monthlyData, consigneeData] = await Promise.all([
+          renderVolumeChart(params),
+          renderConsigneeCharts(params)
+        ]);
+        updateSummaryMetrics(monthlyData, consigneeData);
+        await renderStatusChart();
+      } catch (error) {
+        console.error(error);
+        document.getElementById('volumeMeta').textContent = 'Unable to load monthly shipment trend.';
+        document.getElementById('statusMeta').textContent = 'Unable to load shipment-status distribution.';
+        document.getElementById('consigneeMeta').textContent = 'Unable to load consignee ranking.';
+        document.getElementById('weightMeta').textContent = 'Unable to load consignee weight ranking.';
+      }
     }
 
-    function init() {
-      const applyBtn = document.getElementById("applyFilter");
-      const clearBtn = document.getElementById("clearFilter");
+    document.getElementById('applyFilters').addEventListener('click', applyDashboardFilters);
+    document.getElementById('resetFilters').addEventListener('click', () => {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      applyDashboardFilters();
+    });
 
-      applyBtn.addEventListener("click", () => {
-        renderAll();
-      });
-
-      clearBtn.addEventListener("click", () => {
-        document.getElementById("startDate").value = "";
-        document.getElementById("endDate").value = "";
-        renderAll();
-      });
-
-      renderAll();
-    }
-
-    init();
+    applyDashboardFilters();
   </script>
 </body>
 </html>
