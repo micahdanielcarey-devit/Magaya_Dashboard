@@ -141,16 +141,16 @@ def summary_by_consignee(
 
     where_sql, params = build_date_filters(start_date, end_date)
     sql = f"""
-        SELECT
-            COALESCE(NULLIF(consignee, ''), 'Unknown') AS consignee,
-            COUNT(*) AS shipment_count,
-            COALESCE(SUM(weight), 0) AS total_weight,
-            COALESCE(SUM(pieces), 0) AS total_pieces
-        FROM shipments
-        {where_sql}
-        GROUP BY COALESCE(NULLIF(consignee, ''), 'Unknown')
-        ORDER BY shipment_count DESC, total_weight DESC
-        LIMIT ?
+    SELECT
+        COALESCE(NULLIF(consignee, ''), 'Unknown') AS consignee,
+        COUNT(*) AS shipment_count,
+        COALESCE(SUM(weight), 0) AS total_weight,
+        COALESCE(SUM(pieces), 0) AS total_pieces
+    FROM shipments
+    {where_sql}
+    GROUP BY COALESCE(NULLIF(consignee, ''), 'Unknown')
+    ORDER BY shipment_count DESC, total_weight DESC
+    LIMIT ?
     """
 
     cur.execute(sql, params + [limit])
@@ -178,17 +178,17 @@ def volume_by_month(
 
     where_sql, params = build_date_filters(start_date, end_date)
     sql = f"""
-        SELECT
-            date_year AS year,
-            date_month AS month,
-            COUNT(*) AS shipment_count,
-            COALESCE(SUM(weight), 0) AS total_weight,
-            COALESCE(SUM(pieces), 0) AS total_pieces
-        FROM shipments
-        {where_sql}
-        GROUP BY date_year, date_month
-        HAVING date_year IS NOT NULL AND date_month IS NOT NULL
-        ORDER BY date_year, date_month
+    SELECT
+        date_year AS year,
+        date_month AS month,
+        COUNT(*) AS shipment_count,
+        COALESCE(SUM(weight), 0) AS total_weight,
+        COALESCE(SUM(pieces), 0) AS total_pieces
+    FROM shipments
+    {where_sql}
+    GROUP BY date_year, date_month
+    HAVING date_year IS NOT NULL AND date_month IS NOT NULL
+    ORDER BY date_year, date_month
     """
 
     cur.execute(sql, params)
@@ -221,15 +221,16 @@ def fetch_airline_summary(
         include_internal=False,
         carrier_group=carrier_group,
     )
+
     sql = f"""
-        SELECT
-            carrier,
-            COALESCE(SUM(weight), 0) AS total_weight,
-            COUNT(*) AS shipment_count
-        FROM shipments
-        {where_sql}
-        GROUP BY carrier
-        ORDER BY total_weight DESC, shipment_count DESC
+    SELECT
+        carrier,
+        COALESCE(SUM(weight), 0) AS total_weight,
+        COUNT(*) AS shipment_count
+    FROM shipments
+    {where_sql}
+    GROUP BY carrier
+    ORDER BY total_weight DESC, shipment_count DESC
     """
 
     cur.execute(sql, params)
@@ -300,14 +301,15 @@ def status_summary(
         include_internal=True,
         exclude_status_placeholders=True,
     )
+
     sql = f"""
-        SELECT
-            status,
-            COUNT(*) AS shipment_count
-        FROM shipments
-        {where_sql}
-        GROUP BY status
-        ORDER BY shipment_count DESC
+    SELECT
+        status,
+        COUNT(*) AS shipment_count
+    FROM shipments
+    {where_sql}
+    GROUP BY status
+    ORDER BY shipment_count DESC
     """
 
     cur.execute(sql, params)
@@ -338,17 +340,18 @@ def airlines_weight_over_time(
         end_date=end_date,
         include_internal=False,
     )
+
     sql = f"""
-        SELECT
-            date_year AS year,
-            date_month AS month,
-            carrier,
-            COALESCE(SUM(weight), 0) AS total_weight
-        FROM shipments
-        {where_sql}
-        GROUP BY date_year, date_month, carrier
-        HAVING date_year IS NOT NULL AND date_month IS NOT NULL
-        ORDER BY date_year, date_month, carrier
+    SELECT
+        date_year AS year,
+        date_month AS month,
+        carrier,
+        COALESCE(SUM(weight), 0) AS total_weight
+    FROM shipments
+    {where_sql}
+    GROUP BY date_year, date_month, carrier
+    HAVING date_year IS NOT NULL AND date_month IS NOT NULL
+    ORDER BY date_year, date_month, carrier
     """
 
     cur.execute(sql, params)
@@ -387,18 +390,18 @@ def search_shipments(
     params.extend([like, like, like, like, limit])
 
     sql = f"""
-        SELECT
-            status,
-            number,
-            date,
-            consignee,
-            carrier,
-            weight,
-            pieces
-        FROM shipments
-        {where_sql}
-        ORDER BY date DESC, number DESC
-        LIMIT ?
+    SELECT
+        status,
+        number,
+        date,
+        consignee,
+        carrier,
+        weight,
+        pieces
+    FROM shipments
+    {where_sql}
+    ORDER BY date DESC, number DESC
+    LIMIT ?
     """
 
     cur.execute(sql, params)
