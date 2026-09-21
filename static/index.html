@@ -2,32 +2,295 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDL Cargo Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-body: #f3f4f6;
+      --bg-header: #020617;
+      --bg-card: #ffffff;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --text-dark: #111827;
+      --text-light: #f9fafb;
+      --text-muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: var(--text-dark);
+    }
+    a { color: inherit; text-decoration: none; }
+    .nav {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-dark);
+    }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .nav-logo {
+      width: 34px; height: 34px; border-radius: 999px; background: #3b82f6; color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700;
+    }
+    .nav-title { display: flex; flex-direction: column; }
+    .nav-title span:first-child { font-size: 1rem; font-weight: 700; }
+    .nav-title span:last-child { font-size: 0.8rem; color: var(--text-muted); }
+    .nav-links { display: flex; align-items: center; gap: 10px; }
+    .nav-links a {
+      padding: 8px 14px; border-radius: 999px; font-size: 0.9rem; color: var(--text-muted);
+      border: 1px solid transparent;
+    }
+    .nav-links a.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 18px; }
+    .toolbar {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .toolbar-copy h1 { margin: 0 0 6px; font-size: 1.8rem; }
+    .toolbar-copy p { margin: 0; color: var(--text-muted); max-width: 780px; }
+    .filters {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; background: #fff; border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+    .filter-group input {
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; background: #fff;
+    }
+    button {
+      padding: 10px 14px; border-radius: 10px; border: 1px solid #2563eb; background: #2563eb; color: #fff; font: inherit; cursor: pointer;
+    }
+    button.secondary { background: #fff; color: #2563eb; }
+    .grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;
+    }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .card-header h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    .card-header p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+    .badge {
+      padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 0.78rem; font-weight: 700;
+      white-space: nowrap;
+    }
+    .chart-wrap { position: relative; height: 340px; }
+    .meta { margin-top: 10px; color: var(--text-muted); font-size: 0.9rem; }
+    .error { color: #b91c1c; font-size: 0.9rem; margin-top: 8px; }
+  </style>
 </head>
 <body>
-  <!-- Replace your existing index.html with this updated file. -->
-  <!-- The key content update requested is to keep descriptions tactical and dashboard-focused. -->
+  <nav class="nav">
+    <div class="nav-left">
+      <div class="nav-logo">JDL</div>
+      <div class="nav-title">
+        <span>JDL Cargo Analytics</span>
+        <span>Operations overview from the latest Magaya export</span>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a class="active" href="/">Overview</a>
+      <a href="/static/airlines.html">Carrier View</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <section class="toolbar">
+      <div class="toolbar-copy">
+        <h1>Operations Overview</h1>
+        <p>Review shipment volume, status distribution, and consignee concentration for the selected date range.</p>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="startDate">Start date</label>
+          <input id="startDate" type="date" />
+        </div>
+        <div class="filter-group">
+          <label for="endDate">End date</label>
+          <input id="endDate" type="date" />
+        </div>
+        <button id="applyFilters">Apply</button>
+        <button id="clearFilters" class="secondary">Clear</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Shipment Volume by Month</h2>
+            <p>Monthly shipment count and total chargeable weight for the current filtered view.</p>
+          </div>
+          <div class="badge">Trend</div>
+        </div>
+        <div class="chart-wrap"><canvas id="volumeChart"></canvas></div>
+        <div id="volumeMeta" class="meta"></div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Shipment Status Snapshot</h2>
+            <p>Status mix for shipments in the selected reporting window.</p>
+          </div>
+          <div class="badge">Status</div>
+        </div>
+        <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        <div id="statusMeta" class="meta"></div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Top Consignees by Shipment Count</h2>
+            <p>Highest-volume consignees ranked by shipment count for the current filter.</p>
+          </div>
+          <div class="badge">Ranked</div>
+        </div>
+        <div class="chart-wrap"><canvas id="consigneeCountChart"></canvas></div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div>
+            <h2>Top Consignees by Total Weight</h2>
+            <p>Highest-volume consignees ranked by total chargeable weight for the current filter.</p>
+          </div>
+          <div class="badge">Weight</div>
+        </div>
+        <div class="chart-wrap"><canvas id="consigneeWeightChart"></canvas></div>
+      </article>
+    </section>
+
+    <div id="pageError" class="error"></div>
+  </main>
+
   <script>
-    // NOTE: This is a packaging placeholder so you have a downloadable attachment.
-    // Keep your existing JS/UI structure, but replace the descriptive copy below in your real file if needed.
+    const state = { volumeChart: null, statusChart: null, consigneeCountChart: null, consigneeWeightChart: null };
+
+    function getFilters() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      return { startDate, endDate };
+    }
+
+    function withFilters(path) {
+      const { startDate, endDate } = getFilters();
+      const url = new URL(path, window.location.origin);
+      if (startDate) url.searchParams.set('start_date', startDate);
+      if (endDate) url.searchParams.set('end_date', endDate);
+      return url.toString();
+    }
+
+    async function fetchJson(path) {
+      const res = await fetch(withFilters(path));
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      return res.json();
+    }
+
+    function destroyChart(key) {
+      if (state[key]) state[key].destroy();
+      state[key] = null;
+    }
+
+    function fmtNumber(value) {
+      return new Intl.NumberFormat().format(Math.round(value || 0));
+    }
+
+    function monthLabel(year, month) {
+      return `${year}-${String(month).padStart(2, '0')}`;
+    }
+
+    async function loadVolumeChart() {
+      const data = await fetchJson('/api/summary/volume-by-month');
+      const labels = data.map(d => monthLabel(d.year, d.month));
+      const shipmentCounts = data.map(d => d.shipment_count || 0);
+      const totalWeights = data.map(d => d.total_weight || 0);
+      const totalShipments = shipmentCounts.reduce((a, b) => a + b, 0);
+
+      destroyChart('volumeChart');
+      state.volumeChart = new Chart(document.getElementById('volumeChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Shipment Count', data: shipmentCounts, backgroundColor: '#6386e9', borderRadius: 6, yAxisID: 'y' },
+            { label: 'Total Weight (lb)', data: totalWeights, borderColor: '#1f7a8c', backgroundColor: '#1f7a8c', tension: 0.35, type: 'line', yAxisID: 'y1' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Shipments' } },
+            y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Weight (lb)' } }
+          }
+        }
+      });
+
+      document.getElementById('volumeMeta').textContent = `${labels.length} monthly points · ${fmtNumber(totalShipments)} shipments shown.`;
+    }
+
+    async function loadStatusChart() {
+      const data = await fetchJson('/api/status/summary');
+      destroyChart('statusChart');
+      state.statusChart = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+          labels: data.map(d => `${d.status}`),
+          datasets: [{
+            data: data.map(d => d.shipment_count || 0),
+            backgroundColor: ['#b779a2', '#6b7280', '#2b6cb0', '#d69e2e', '#4c51bf', '#38a169']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+      document.getElementById('statusMeta').textContent = `${data.length} status groups in the current filter.`;
+    }
+
+    async function loadConsigneeCharts() {
+      const data = await fetchJson('/api/summary/by-consignee');
+      const labels = data.map(d => d.consignee);
+      destroyChart('consigneeCountChart');
+      destroyChart('consigneeWeightChart');
+
+      state.consigneeCountChart = new Chart(document.getElementById('consigneeCountChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Shipment Count', data: data.map(d => d.shipment_count || 0), backgroundColor: '#6386e9', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+      });
+
+      state.consigneeWeightChart = new Chart(document.getElementById('consigneeWeightChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Total Weight (lb)', data: data.map(d => d.total_weight || 0), backgroundColor: '#67b3e6', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+      });
+    }
+
+    async function loadDashboard() {
+      document.getElementById('pageError').textContent = '';
+      try {
+        await Promise.all([loadVolumeChart(), loadStatusChart(), loadConsigneeCharts()]);
+      } catch (err) {
+        document.getElementById('pageError').textContent = `Dashboard load error: ${err.message}`;
+      }
+    }
+
+    document.getElementById('applyFilters').addEventListener('click', loadDashboard);
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      loadDashboard();
+    });
+
+    loadDashboard();
   </script>
-
-  <div data-copy-updates style="display:none;">
-    <h2>Shipment Volume by Month</h2>
-    <p>Monthly shipment count and total chargeable weight for the current filtered view.</p>
-
-    <h2>Shipment Status Snapshot</h2>
-    <p>Status mix for shipments in the selected reporting window.</p>
-
-    <h2>Top Consignees by Shipment Count</h2>
-    <p>Highest-volume consignees ranked by shipment count for the current filter.</p>
-
-    <h2>Top Consignees by Total Weight</h2>
-    <p>Highest-volume consignees ranked by total chargeable weight for the current filter.</p>
-
-    <h2>Overview subtitle</h2>
-    <p>Review shipment volume, status distribution, and consignee concentration for the selected date range.</p>
-  </div>
 </body>
 </html>

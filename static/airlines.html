@@ -2,24 +2,220 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Airline Operations Overview</title>
+  <title>JDL Cargo Analytics – Carrier View</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    h1 { margin: 0 0 4px; font-size: 1.8rem; }
+    p { margin: 0; color: #6b7280; }
+    a.button-link {
+      display: inline-block; padding: 8px 14px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; text-decoration: none; font-weight: 600;
+      border: 1px solid #bfdbfe;
+    }
+    .filters {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; background: #fff; border: 1px solid #d1d5db; border-radius: 14px; padding: 12px; margin-bottom: 18px;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-size: 0.78rem; color: #6b7280; font-weight: 600; }
+    .filter-group input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; font: inherit; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; }
+    button.secondary { background: #fff; color: #2563eb; }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      grid-template-rows: 360px 360px;
+      gap: 18px;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; grid-auto-rows: 360px; }
+    }
+    .card {
+      background: #fff; border-radius: 16px; border: 1px solid #d1d5db; box-shadow: 0 8px 24px rgba(15,23,42,0.06); padding: 16px; display: flex; flex-direction: column;
+    }
+    .card-header h2 { margin: 0 0 4px; font-size: 1rem; }
+    .card-header span { display: block; color: #6b7280; font-size: 0.88rem; }
+    .chart-wrapper { flex: 1; position: relative; margin-top: 10px; }
+    .error { color: #b91c1c; font-size: 0.9rem; margin-top: 12px; }
+  </style>
 </head>
 <body>
-  <!-- Replace your existing airlines.html with this updated file. -->
-  <!-- Tactical copy only, without references to visual styling rationale. -->
-  <div data-copy-updates style="display:none;">
-    <h2>Total Weight by Airline</h2>
-    <p>Total chargeable weight by airline for the selected reporting window.</p>
-
-    <h2>Commercial Airlines</h2>
-    <p>Total chargeable weight by commercial airline for the current filter.</p>
-
-    <h2>Conquest vs IBC vs Florida Air</h2>
-    <p>Carrier-group comparison by total chargeable weight for the selected date range.</p>
-
-    <h2>Airline Weight Over Time</h2>
-    <p>Monthly chargeable weight trend by airline for the current filter.</p>
+  <div class="topbar">
+    <div>
+      <h1>Airline Operations Overview</h1>
+      <p>Weight and volume by airline for the selected reporting window.</p>
+    </div>
+    <a class="button-link" href="/">Back to Overview</a>
   </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="startDate">Start date</label>
+      <input id="startDate" type="date" />
+    </div>
+    <div class="filter-group">
+      <label for="endDate">End date</label>
+      <input id="endDate" type="date" />
+    </div>
+    <button id="applyFilters">Apply</button>
+    <button id="clearFilters" class="secondary">Clear</button>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-header">
+        <h2>Total Weight by Airline</h2>
+        <span>Total chargeable weight by airline for the selected reporting window.</span>
+      </div>
+      <div class="chart-wrapper"><canvas id="allAirlinesChart"></canvas></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Commercial Airlines</h2>
+        <span>Total chargeable weight by commercial airline for the current filter.</span>
+      </div>
+      <div class="chart-wrapper"><canvas id="commercialChart"></canvas></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Conquest vs IBC vs Florida Air</h2>
+        <span>Carrier-group comparison by total chargeable weight for the selected date range.</span>
+      </div>
+      <div class="chart-wrapper"><canvas id="groupChart"></canvas></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Airline Weight Over Time</h2>
+        <span>Monthly chargeable weight trend by airline for the current filter.</span>
+      </div>
+      <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
+    </section>
+  </div>
+
+  <div id="pageError" class="error"></div>
+
+  <script>
+    const state = { allAirlinesChart: null, commercialChart: null, groupChart: null, trendChart: null };
+
+    function getFilters() {
+      return {
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+      };
+    }
+
+    function withFilters(path) {
+      const { startDate, endDate } = getFilters();
+      const url = new URL(path, window.location.origin);
+      if (startDate) url.searchParams.set('start_date', startDate);
+      if (endDate) url.searchParams.set('end_date', endDate);
+      return url.toString();
+    }
+
+    async function fetchJson(path) {
+      const res = await fetch(withFilters(path));
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      return res.json();
+    }
+
+    function destroyChart(key) {
+      if (state[key]) state[key].destroy();
+      state[key] = null;
+    }
+
+    function buildBarChart(id, key, label, rows, color = '#67b3e6') {
+      destroyChart(key);
+      state[key] = new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: {
+          labels: rows.map(r => r.carrier),
+          datasets: [{ label, data: rows.map(r => r.total_weight || 0), backgroundColor: color, borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+      });
+    }
+
+    async function loadAirlineCharts() {
+      const [allRows, commercialRows, conquestRows, ibcRows, floridaRows, trendRows] = await Promise.all([
+        fetchJson('/api/airlines/weight-summary'),
+        fetchJson('/api/commercial-airlines/weight-summary'),
+        fetchJson('/api/conquest-airlines/weight-summary'),
+        fetchJson('/api/ibc-airlines/weight-summary'),
+        fetchJson('/api/floridaair-airlines/weight-summary'),
+        fetchJson('/api/airlines/weight-over-time'),
+      ]);
+
+      buildBarChart('allAirlinesChart', 'allAirlinesChart', 'Total Weight (lb)', allRows);
+      buildBarChart('commercialChart', 'commercialChart', 'Total Weight (lb)', commercialRows, '#6386e9');
+
+      destroyChart('groupChart');
+      state.groupChart = new Chart(document.getElementById('groupChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Conquest', 'IBC', 'Florida Air'],
+          datasets: [{
+            label: 'Total Weight (lb)',
+            data: [conquestRows, ibcRows, floridaRows].map(group => group.reduce((sum, row) => sum + (row.total_weight || 0), 0)),
+            backgroundColor: ['#7c3aed', '#2563eb', '#0f766e'],
+            borderRadius: 6,
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      const grouped = {};
+      trendRows.forEach(row => {
+        const label = `${row.year}-${String(row.month).padStart(2, '0')}`;
+        if (!grouped[row.carrier]) grouped[row.carrier] = {};
+        grouped[row.carrier][label] = row.total_weight || 0;
+      });
+      const labels = [...new Set(trendRows.map(r => `${r.year}-${String(r.month).padStart(2, '0')}`))];
+      const topCarriers = Object.keys(grouped).slice(0, 6);
+      const colors = ['#2563eb', '#7c3aed', '#0f766e', '#dc2626', '#d97706', '#0891b2'];
+
+      destroyChart('trendChart');
+      state.trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: topCarriers.map((carrier, i) => ({
+            label: carrier,
+            data: labels.map(label => grouped[carrier][label] || 0),
+            borderColor: colors[i % colors.length],
+            backgroundColor: colors[i % colors.length],
+            tension: 0.3,
+          }))
+        },
+        options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+      });
+    }
+
+    async function loadPage() {
+      document.getElementById('pageError').textContent = '';
+      try {
+        await loadAirlineCharts();
+      } catch (err) {
+        document.getElementById('pageError').textContent = `Carrier view load error: ${err.message}`;
+      }
+    }
+
+    document.getElementById('applyFilters').addEventListener('click', loadPage);
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      loadPage();
+    });
+
+    loadPage();
+  </script>
 </body>
 </html>
